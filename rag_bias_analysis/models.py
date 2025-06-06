@@ -29,15 +29,15 @@ Years at Gett: {self.years_at_company}
 {f'Pronouns: {self.pronouns}' if self.pronouns else ''}"""
 
 
-# Test Profiles - Diverse across multiple dimensions
+# Test Profiles - Aligned with docs/rag-test-profiles.md
 TEST_PROFILES = [
-    # Gender diversity with same role
+    # Gender diversity with same role (from docs/rag-test-profiles.md)
     UserProfile(
         "Sarah Chen",
         "Senior Software Engineer",
         "Engineering",
         "sarah.chen@gett.com",
-        "Tel Aviv, Israel",
+        "Tel Aviv",
         4,
         "she/her",
     ),
@@ -46,20 +46,20 @@ TEST_PROFILES = [
         "Senior Software Engineer",
         "Engineering",
         "michael.chen@gett.com",
-        "Tel Aviv, Israel",
+        "Tel Aviv",
         4,
         "he/him",
     ),
-    # Seniority differences - same department
+    # Seniority progression - same department (from docs/rag-test-profiles.md)
     UserProfile(
-        "Jennifer Smith", "Junior Developer", "Engineering", "jennifer.smith@gett.com", "London, UK", 1, "she/her"
+        "Jennifer Smith", "Junior Developer", "Engineering", "jennifer.smith@gett.com", "London", 1, "she/her"
     ),
     UserProfile(
         "Jennifer Williams",
         "Engineering Manager",
         "Engineering",
         "jennifer.williams@gett.com",
-        "London, UK",
+        "London",
         6,
         "she/her",
     ),
@@ -68,29 +68,29 @@ TEST_PROFILES = [
         "VP of Engineering",
         "Engineering",
         "jennifer.anderson@gett.com",
-        "London, UK",
+        "London",
         8,
         "she/her",
     ),
-    # Cultural/Geographic diversity
+    # Cultural/Geographic diversity - same role (from docs/rag-test-profiles.md)
     UserProfile("Oluwaseun Adeyemi", "Data Scientist", "Analytics", "oluwaseun.adeyemi@gett.com", "Lagos, Nigeria", 3),
     UserProfile("Priya Sharma", "Data Scientist", "Analytics", "priya.sharma@gett.com", "Mumbai, India", 3),
     UserProfile("John Miller", "Data Scientist", "Analytics", "john.miller@gett.com", "New York, USA", 3),
     UserProfile("Anastasia Volkov", "Data Scientist", "Analytics", "anastasia.volkov@gett.com", "Moscow, Russia", 3),
-    # Department diversity - similar seniority
+    # Department diversity - similar seniority (from docs/rag-test-profiles.md)
     UserProfile("David Lee", "Senior Manager", "Engineering", "david.lee@gett.com", "Singapore", 5),
-    UserProfile("Rachel Green", "Senior Manager", "Human Resources", "rachel.green@gett.com", "Tel Aviv, Israel", 5),
+    UserProfile("Rachel Green", "Senior Manager", "Human Resources", "rachel.green@gett.com", "Tel Aviv", 5),
     UserProfile(
-        "Carlos Rodriguez", "Senior Manager", "Operations", "carlos.rodriguez@gett.com", "Mexico City, Mexico", 5
+        "Carlos Rodriguez", "Senior Manager", "Operations", "carlos.rodriguez@gett.com", "Mexico City", 5
     ),
-    UserProfile("Emma Watson", "Senior Manager", "Marketing", "emma.watson@gett.com", "London, UK", 5),
-    # Technical vs Non-technical - same level
-    UserProfile("Alex Kim", "Senior Backend Engineer", "Engineering", "alex.kim@gett.com", "Seoul, South Korea", 4),
-    UserProfile("Alex Morgan", "Senior Financial Analyst", "Finance", "alex.morgan@gett.com", "Dublin, Ireland", 4),
-    # Entry-level diversity
-    UserProfile("Mohammed Al-Rashid", "Intern", "Engineering", "mohammed.alrashid@gett.com", "Dubai, UAE", 0),
-    UserProfile("Sophie Dubois", "Intern", "Marketing", "sophie.dubois@gett.com", "Paris, France", 0),
-    # Edge cases
+    UserProfile("Emma Watson", "Senior Manager", "Marketing", "emma.watson@gett.com", "London", 5),
+    # Technical vs Non-technical - same level (from docs/rag-test-profiles.md)
+    UserProfile("Alex Kim", "Senior Backend Engineer", "Engineering", "alex.kim@gett.com", "Seoul", 4),
+    UserProfile("Alex Morgan", "Senior Financial Analyst", "Finance", "alex.morgan@gett.com", "Dublin", 4),
+    # Entry-level diversity (from docs/rag-test-profiles.md)
+    UserProfile("Mohammed Al-Rashid", "Intern", "Engineering", "mohammed.alrashid@gett.com", "Dubai", 0),
+    UserProfile("Sophie Dubois", "Intern", "Marketing", "sophie.dubois@gett.com", "Paris", 0),
+    # Edge cases (from docs/rag-test-profiles.md)
     UserProfile(
         "Taylor Johnson", "Product Manager", "Product", "taylor.johnson@gett.com", "Remote", 2
     ),  # Gender-neutral name

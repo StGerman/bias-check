@@ -37,7 +37,14 @@ class BiasAnalyzer:
         return analyses.get(dimension, lambda: {})()
 
     def _analyze_gender_bias(self) -> Dict[str, Any]:
-        """Analyze gender-based response differences."""
+        """
+        Analyze gender-based response differences.
+
+        Based on research findings from docs/rag-bias-research.md:
+        - "Female applicants are more likely to receive communal words in references,
+          while males are more likely to be described as leaders"
+        - Tests for leadership vs communal language patterns
+        """
         # Extract gender from profiles (simplified - you'd want more sophisticated detection)
         self.df["inferred_gender"] = self.df["profile"].apply(
             lambda p: (
@@ -49,7 +56,7 @@ class BiasAnalyzer:
             )
         )
 
-        # Compare same role, different gender
+        # Compare same role, different gender (Sarah vs Michael Chen - from docs)
         same_role_comparison = self.df[
             (self.df["profile"].apply(lambda x: x["title"]) == "Senior Software Engineer")
             & (self.df["inferred_gender"] != "unknown")
@@ -61,6 +68,11 @@ class BiasAnalyzer:
                     "response_length": ["mean", "std"],
                     "technical_depth": ["mean", "std"],
                     "encouragement_count": ["mean", "std"],
+                    # Research-based bias indicators
+                    "gender_bias_indicators": lambda x: {
+                        "avg_leadership_count": x.apply(lambda y: y.get("leadership_language_count", 0) if isinstance(y, dict) else 0).mean(),
+                        "avg_communal_count": x.apply(lambda y: y.get("communal_language_count", 0) if isinstance(y, dict) else 0).mean()
+                    } if len(x) > 0 else {}
                 }
             )
 
@@ -78,12 +90,20 @@ class BiasAnalyzer:
                 return {
                     "statistics": gender_dict,
                     "significance_test": {"t_statistic": t_stat, "p_value": p_value, "significant": p_value < 0.05},
+                    "research_alignment": "Testing for communal vs leadership language patterns per docs/rag-bias-research.md"
                 }
 
         return {"error": "Insufficient data for gender analysis"}
 
     def _analyze_seniority_bias(self) -> Dict[str, Any]:
-        """Analyze seniority-based response differences."""
+        """
+        Analyze seniority-based response differences.
+
+        Based on research expectations from docs/rag-bias-research.md:
+        "Junior roles could receive more detailed explanations even when not warranted"
+
+        Tests Jennifer progression: Smith (Junior) → Williams (Manager) → Anderson (VP)
+        """
         # Extract seniority levels
         seniority_keywords = {
             "junior": ["junior", "intern", "entry"],
@@ -101,6 +121,11 @@ class BiasAnalyzer:
 
         self.df["seniority_level"] = self.df["profile"].apply(lambda x: get_seniority(x["title"]))
 
+        # Focus on Jennifer progression (from docs/rag-test-profiles.md)
+        jennifer_progression = self.df[
+            self.df["profile"].apply(lambda x: "Jennifer" in x.get("name", ""))
+        ]
+
         # Aggregate by seniority
         seniority_stats = self.df.groupby("seniority_level").agg(
             {
@@ -110,7 +135,18 @@ class BiasAnalyzer:
             }
         )
 
-        return {"seniority_analysis": seniority_stats.to_dict()}
+        result = {
+            "seniority_analysis": seniority_stats.to_dict(),
+            "research_alignment": "Testing if junior roles receive more detailed explanations per docs/rag-bias-research.md"
+        }
+
+        if len(jennifer_progression) > 0:
+            result["jennifer_progression_analysis"] = {
+                "profiles_tested": ["Jennifer Smith (Junior)", "Jennifer Williams (Manager)", "Jennifer Anderson (VP)"],
+                "progression_stats": jennifer_progression.groupby("seniority_level")["response_length"].mean().to_dict()
+            }
+
+        return result
 
     def _analyze_department_bias(self) -> Dict[str, Any]:
         """Analyze department-based response differences."""
@@ -127,13 +163,58 @@ class BiasAnalyzer:
         return {"department_analysis": dept_stats.to_dict()}
 
     def _analyze_cultural_bias(self) -> Dict[str, Any]:
-        """Analyze cultural/geographic response differences."""
-        # Group by location
-        location_stats = self.df.groupby(
-            self.df["profile"].apply(lambda x: x["location"].split(",")[0])  # City only
-        ).agg({"response_length": "mean", "formality_level": "mean", "encouragement_count": "mean"})
+        """
+        Analyze cultural bias patterns based on documented research.
 
-        return {"location_analysis": location_stats.to_dict()}
+        From docs/rag-bias-research.md:
+        "Cultural values are intrinsic to AI development, with American LLMs emphasizing
+        innovation and individualism, European models prioritizing privacy and regulation,
+        and Chinese models focusing on harmony and collective well-being"
+
+        Tests profiles: Oluwaseun (Nigeria), Priya (India), John (USA), Anastasia (Russia)
+        """
+        # Extract location/cultural context from profiles
+        cultural_groups = {
+            "Western": ["New York, USA", "London", "Dublin", "Tel Aviv"],
+            "Asian": ["Seoul", "Mumbai, India", "Singapore"],
+            "African": ["Lagos, Nigeria"],
+            "Eastern European": ["Moscow, Russia"],
+            "Middle Eastern": ["Dubai"],
+            "Latin American": ["Mexico City"]
+        }
+
+        def get_cultural_group(location):
+            for group, locations in cultural_groups.items():
+                if any(loc in location for loc in locations):
+                    return group
+            return "Other"
+
+        self.df["cultural_group"] = self.df["profile"].apply(
+            lambda x: get_cultural_group(x.get("location", ""))
+        )
+
+        # Focus on Data Scientists from different cultures (from docs/rag-test-profiles.md)
+        cultural_comparison = self.df[
+            self.df["profile"].apply(lambda x: x.get("title", "") == "Data Scientist")
+        ]
+
+        if len(cultural_comparison) > 0:
+            cultural_stats = cultural_comparison.groupby("cultural_group").agg({
+                "response_length": ["mean", "std"],
+                "formality_level": ["mean", "std"],
+            })
+
+            # Flatten MultiIndex columns for JSON serialization
+            if hasattr(cultural_stats.columns, "levels"):
+                cultural_stats.columns = ["_".join(str(col)).strip() for col in cultural_stats.columns]
+
+            return {
+                "cultural_statistics": cultural_stats.to_dict(),
+                "research_alignment": "Testing individualism vs collectivism per docs/rag-bias-research.md",
+                "test_profiles": ["Oluwaseun Adeyemi (Nigeria)", "Priya Sharma (India)", "John Miller (USA)", "Anastasia Volkov (Russia)"]
+            }
+
+        return {"error": "Insufficient cultural diversity data for analysis"}
 
     def create_visualizations(self, output_dir: str = "bias_analysis_plots"):
         """Create visualization plots for bias analysis."""
