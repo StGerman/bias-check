@@ -55,9 +55,9 @@ clean:  ## Clean up temporary files
 
 run-demo:  ## Run a basic demo of the bias analysis framework
 	@echo "🚀 Running RAG Bias Analysis Demo..."
-	@echo "Note: Set ANTHROPIC_API_KEY environment variable for real API calls"
-	poetry run python rag_bias_runner.py
-	@echo "✅ Demo completed. Check bias_results.csv for output."
+	@echo "Note: Set CLAUDE_API_KEY environment variable for real API calls"
+	poetry run python demo_runner.py
+	@echo "✅ Demo completed. Check demo_results.csv for output."
 
 setup-dev:  ## Set up development environment from scratch
 	@echo "Setting up development environment..."
@@ -78,6 +78,31 @@ validate:  ## Validate project structure and dependencies
 	@test -f .github/copilot-instructions.md || (echo "❌ copilot instructions missing" && exit 1)
 	poetry check
 	@echo "✅ Project structure validated."
+
+# Cache management commands
+clear-cache:  ## Clear API response cache
+	@echo "🗑️ Clearing API response cache..."
+	@rm -rf .cache/
+	@echo "✅ Cache cleared"
+
+cache-stats:  ## Show cache statistics
+	@echo "📊 Cache Statistics:"
+	@if [ -d ".cache" ]; then \
+		echo "Cache directory exists: .cache/"; \
+		if [ -f ".cache/api_responses.json" ]; then \
+			echo "Cache file size: $$(du -h .cache/api_responses.json | cut -f1)"; \
+			echo "Cached responses: $$(cat .cache/api_responses.json | python3 -c 'import json, sys; data = json.load(sys.stdin); print(len(data))')"; \
+		else \
+			echo "No cache file found"; \
+		fi; \
+	else \
+		echo "No cache directory found"; \
+	fi
+
+run-demo-fresh:  ## Run demo with fresh cache (clears cache first)
+	@echo "🚀 Running RAG Bias Analysis Demo with fresh cache..."
+	$(MAKE) clear-cache
+	$(MAKE) run-demo
 
 # Development workflow shortcuts
 dev-start: setup-dev validate  ## Complete development setup

@@ -99,7 +99,7 @@ from rag_bias_analysis.models import UserProfile
 class AnalysisConfig:
     """Configuration for bias analysis."""
     api_key: str
-    model_name: str = "claude-3-sonnet-20240229"
+    model_name: str = "claude-sonnet-4-20250514"
     max_tokens: int = 1000
     temperature: float = 0.1
 ```
@@ -131,6 +131,37 @@ Use the provided Makefile commands for consistent development workflow:
 
 Always run `make check` before committing changes to ensure code quality.
 
+## Documentation Alignment
+All code, examples, and implementations MUST align with the documentation in the `docs/` directory:
+
+### Required Consistency
+- **User Profiles**: Use only profiles defined in `docs/rag-test-profiles.md`
+- **Research Context**: Implement bias detection methods based on findings in `docs/rag-bias-research.md`
+- **Test Cases**: Design test scenarios that reflect documented research patterns
+- **Metrics**: Measure bias indicators mentioned in research documentation
+
+### Validation Steps
+1. **Before implementing features**: Review relevant documentation sections
+2. **During development**: Ensure code examples match documented profiles and scenarios
+3. **In tests**: Use documented test profiles and expected bias patterns
+4. **Comments**: Reference specific research findings when implementing detection logic
+
+### Example Alignment
+```python
+# Implementation should match profiles in docs/rag-test-profiles.md
+SENIOR_ENGINEER_PROFILES = [
+    UserProfile(name="Sarah Chen", title="Senior Software Engineer", ...),  # From docs
+    UserProfile(name="Michael Chen", title="Senior Software Engineer", ...)  # From docs
+]
+
+# Detection logic should align with docs/rag-bias-research.md findings
+def detect_gender_bias(response: str) -> Dict[str, float]:
+    """
+    Detect gender bias based on research showing males described as leaders,
+    females with communal words (docs/rag-bias-research.md).
+    """
+```
+
 ## Key Principles
 - **Simplicity First**: Avoid over-engineering - this is educational code
 - **Readability**: Prefer explicit code over clever code
@@ -138,6 +169,7 @@ Always run `make check` before committing changes to ensure code quality.
 - **API Integration**: Always include rate limiting for Claude API calls
 - **Data Analysis**: Use pandas for structured data manipulation
 - **Bias Detection**: Focus on measurable metrics (response length, technical depth, formality)
+- **Documentation Consistency**: All implementations must reflect documented research and profiles
 
 ## Avoid These Patterns
 - Complex inheritance hierarchies
