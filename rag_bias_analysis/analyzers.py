@@ -2,6 +2,7 @@
 Bias analysis and visualization tools.
 """
 
+import ast
 import os
 from typing import Any, Dict
 
@@ -23,6 +24,54 @@ class BiasAnalyzer:
 
     def __init__(self, results_df: pd.DataFrame):
         self.df = results_df
+        self._prepare_data()
+
+    def _prepare_data(self):
+        """Prepare data by parsing string representations and flattening indicators."""
+        # Parse profile strings back to dictionaries if they're stored as strings
+        if 'profile' in self.df.columns and isinstance(self.df['profile'].iloc[0], str):
+            self.df['profile'] = self.df['profile'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+
+        # Flatten nested bias indicators
+        self._flatten_bias_indicators()
+
+    def _flatten_bias_indicators(self):
+        """
+        Flatten nested bias indicator dictionaries into DataFrame columns.
+
+        This handles the case where bias indicators are stored as nested
+        dictionaries (e.g., from ClaudeRAGAnalyzer) and converts them
+        to flat column structure for easier analysis.
+        """
+        # Gender bias indicators
+        if "gender_bias_indicators" in self.df.columns:
+            for idx, row in self.df.iterrows():
+                indicators = row.get("gender_bias_indicators", {})
+                if isinstance(indicators, dict):
+                    for key, value in indicators.items():
+                        if key not in self.df.columns:
+                            self.df[key] = 0  # Initialize column
+                        self.df.at[idx, key] = value
+
+        # Cultural bias indicators
+        if "cultural_bias_indicators" in self.df.columns:
+            for idx, row in self.df.iterrows():
+                indicators = row.get("cultural_bias_indicators", {})
+                if isinstance(indicators, dict):
+                    for key, value in indicators.items():
+                        if key not in self.df.columns:
+                            self.df[key] = 0  # Initialize column
+                        self.df.at[idx, key] = value
+
+        # Seniority bias indicators
+        if "seniority_bias_indicators" in self.df.columns:
+            for idx, row in self.df.iterrows():
+                indicators = row.get("seniority_bias_indicators", {})
+                if isinstance(indicators, dict):
+                    for key, value in indicators.items():
+                        if key not in self.df.columns:
+                            self.df[key] = 0  # Initialize column
+                        self.df.at[idx, key] = value
 
     def analyze_by_dimension(self, dimension: str) -> Dict[str, Any]:
         """Analyze bias patterns by specific dimension."""
@@ -63,18 +112,20 @@ class BiasAnalyzer:
         ]
 
         if len(same_role_comparison) > 0:
-            gender_stats = same_role_comparison.groupby("inferred_gender").agg(
-                {
-                    "response_length": ["mean", "std"],
-                    "technical_depth": ["mean", "std"],
-                    "encouragement_count": ["mean", "std"],
-                    # Research-based bias indicators
-                    "gender_bias_indicators": lambda x: {
-                        "avg_leadership_count": x.apply(lambda y: y.get("leadership_language_count", 0) if isinstance(y, dict) else 0).mean(),
-                        "avg_communal_count": x.apply(lambda y: y.get("communal_language_count", 0) if isinstance(y, dict) else 0).mean()
-                    } if len(x) > 0 else {}
-                }
-            )
+            # Build aggregation dict dynamically based on available columns
+            agg_dict = {
+                "response_length": ["mean", "std"],
+                "technical_depth": ["mean", "std"],
+                "encouragement_count": ["mean", "std"],
+            }
+
+            # Add gender bias indicators if they exist as flattened columns
+            if "leadership_language_count" in same_role_comparison.columns:
+                agg_dict["leadership_language_count"] = ["mean", "std"]
+            if "communal_language_count" in same_role_comparison.columns:
+                agg_dict["communal_language_count"] = ["mean", "std"]
+
+            gender_stats = same_role_comparison.groupby("inferred_gender").agg(agg_dict)
 
             # Flatten MultiIndex columns for JSON serialization
             gender_stats.columns = ["_".join(col).strip() for col in gender_stats.columns]
@@ -126,14 +177,22 @@ class BiasAnalyzer:
             self.df["profile"].apply(lambda x: "Jennifer" in x.get("name", ""))
         ]
 
+        # Build aggregation dict based on available columns
+        agg_dict = {
+            "response_length": "mean",
+            "technical_depth": "mean",
+        }
+
+        # Add seniority bias indicators if they exist as flattened columns
+        if "advanced_terminology_count" in self.df.columns:
+            agg_dict["advanced_terminology_count"] = "mean"
+        if "beginner_accommodations" in self.df.columns:
+            agg_dict["beginner_accommodations"] = "mean"
+        if "assumed_expertise" in self.df.columns:
+            agg_dict["assumed_expertise"] = lambda x: x.value_counts().to_dict() if len(x) > 0 else {}
+
         # Aggregate by seniority
-        seniority_stats = self.df.groupby("seniority_level").agg(
-            {
-                "response_length": "mean",
-                "technical_depth": "mean",
-                "assumed_expertise": lambda x: x.value_counts().to_dict() if len(x) > 0 else {},
-            }
-        )
+        seniority_stats = self.df.groupby("seniority_level").agg(agg_dict)
 
         result = {
             "seniority_analysis": seniority_stats.to_dict(),
@@ -199,10 +258,19 @@ class BiasAnalyzer:
         ]
 
         if len(cultural_comparison) > 0:
-            cultural_stats = cultural_comparison.groupby("cultural_group").agg({
+            # Build aggregation dict based on available columns
+            agg_dict = {
                 "response_length": ["mean", "std"],
                 "formality_level": ["mean", "std"],
-            })
+            }
+
+            # Add cultural bias indicators if they exist as flattened columns
+            if "individualism_emphasis" in cultural_comparison.columns:
+                agg_dict["individualism_emphasis"] = ["mean", "std"]
+            if "collectivism_emphasis" in cultural_comparison.columns:
+                agg_dict["collectivism_emphasis"] = ["mean", "std"]
+
+            cultural_stats = cultural_comparison.groupby("cultural_group").agg(agg_dict)
 
             # Flatten MultiIndex columns for JSON serialization
             if hasattr(cultural_stats.columns, "levels"):
