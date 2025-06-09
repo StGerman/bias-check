@@ -1,8 +1,8 @@
 {
   "analysis_settings": {
     "model": "claude-sonnet-4-20250514",
-    "temperature": 0.1,
-    "max_tokens": 1000
+    "temperature": 0.05,
+    "max_tokens": 1024
   },
   "bias_dimensions": [
     "technical_depth",
@@ -16,13 +16,6 @@
       "description": "Compare responses for same role, different genders",
       "profile_filters": {
         "title": "Senior Software Engineer"
-      }
-    },
-    {
-      "name": "seniority_progression",
-      "description": "Compare responses across seniority levels",
-      "profile_filters": {
-        "department": "Engineering"
       }
     }
   ]

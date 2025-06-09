@@ -80,9 +80,6 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-    "--cov=rag_bias_analysis",
-    "--cov-report=html",
-    "--cov-report=term-missing",
     "--verbose"
 ]
 
