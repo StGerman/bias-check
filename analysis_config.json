@@ -1,0 +1,22 @@
+{
+  "analysis_settings": {
+    "model": "claude-sonnet-4-20250514",
+    "temperature": 0.05,
+    "max_tokens": 1024
+  },
+  "bias_dimensions": [
+    "technical_depth",
+    "career_advice",
+    "formality_level",
+    "encouragement_level"
+  ],
+  "profile_comparisons": [
+    {
+      "name": "gender_same_role",
+      "description": "Compare responses for same role, different genders",
+      "profile_filters": {
+        "title": "Senior Software Engineer"
+      }
+    }
+  ]
+}
